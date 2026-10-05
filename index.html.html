@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Agenda Doble Jornada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: barra de resumen arriba, pestañas, grilla semanal Lun–Dom con la jornada laboral como banda de fondo */
+:root{
+  --bg:#F2F5F4; --surface:#FFFFFF; --ink:#17232A; --muted:#5B696E; --line:#DCE3E1;
+  --accent:#2C5D59; --accent-ink:#FFFFFF; --accent-soft:#DDEBE7;
+  --work:#E4E8EF; --work-hatch:#CBD2DE; --work-ink:#4A5568;
+  --block:#F3E6CB; --block-ink:#6B4E12;
+  --online:#E3E4F6; --online-ink:#383C86;
+  --danger:#B23E2C; --danger-soft:#F8E1DC; --warn:#9A6200; --warn-soft:#F7ECD4; --ok:#2D7A4D;
+  --shadow:0 1px 2px rgba(23,35,42,.06),0 6px 18px rgba(23,35,42,.06);
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11171A; --surface:#182125; --ink:#E3EAEA; --muted:#93A2A5; --line:#29353A;
+  --accent:#7DC3B6; --accent-ink:#0E1F1C; --accent-soft:#1D3532;
+  --work:#1F2830; --work-hatch:#2C3742; --work-ink:#A9B5C4;
+  --block:#3A311F; --block-ink:#EFCF8E;
+  --online:#262A4A; --online-ink:#C3C6F5;
+  --danger:#E7826F; --danger-soft:#3D221D; --warn:#E2AA45; --warn-soft:#382C17; --ok:#6CC08E;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11171A; --surface:#182125; --ink:#E3EAEA; --muted:#93A2A5; --line:#29353A;
+  --accent:#7DC3B6; --accent-ink:#0E1F1C; --accent-soft:#1D3532;
+  --work:#1F2830; --work-hatch:#2C3742; --work-ink:#A9B5C4;
+  --block:#3A311F; --block-ink:#EFCF8E;
+  --online:#262A4A; --online-ink:#C3C6F5;
+  --danger:#E7826F; --danger-soft:#3D221D; --warn:#E2AA45; --warn-soft:#382C17; --ok:#6CC08E;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25); color-scheme:dark}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:26px} h2{font-size:18px} h3{font-size:15px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.brand p{margin:4px 0 0;color:var(--muted);max-width:60ch}
+.hdr-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:var(--surface)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.dot.on{background:var(--ok)}
+
+.privacy{font-size:12.5px;color:var(--muted);border-left:3px solid var(--accent);padding:6px 10px;background:var(--surface);border-radius:0 6px 6px 0}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat .k{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.stat .v{font-family:var(--f-display);font-size:22px;font-variant-numeric:tabular-nums}
+.stat .s{font-size:12px;color:var(--muted)}
+.stat.alert{border-color:var(--danger);background:var(--danger-soft)}
+.stat.alert .v{color:var(--danger)}
+.stat.good .v{color:var(--ok)}
+
+nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{background:none;border:0;padding:10px 14px;border-bottom:2px solid transparent;color:var(--muted);font-weight:500;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between}
+.toolbar .grp{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;font-weight:500}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.sm{padding:4px 9px;font-size:12.5px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.weeklabel{font-family:var(--f-display);font-size:16px;font-weight:600;min-width:0}
+
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:10px;border-radius:3px;display:inline-block}
+.sw.work{background:repeating-linear-gradient(135deg,var(--work) 0 4px,var(--work-hatch) 4px 6px)}
+.sw.pres{background:var(--accent-soft);border-left:3px solid var(--accent)}
+.sw.onl{background:var(--online);border-left:3px solid var(--online-ink)}
+.sw.blk{background:var(--block);border-left:3px solid var(--block-ink)}
+.sw.err{background:var(--danger-soft);border:1.5px solid var(--danger)}
+
+.gridbox{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow-x:auto;box-shadow:var(--shadow)}
+.grid{display:grid;grid-template-columns:52px repeat(7,minmax(96px,1fr));min-width:760px}
+.dh{position:sticky;top:0;z-index:3;background:var(--surface);border-bottom:1px solid var(--line);padding:8px 6px;text-align:center;display:flex;flex-direction:column;gap:3px;align-items:center}
+.dh .dn{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.dh .dd{font-family:var(--f-display);font-size:18px;font-weight:600;line-height:1}
+.dh.today .dd{color:var(--accent)}
+.dh.today .dd::after{content:"";display:block;height:3px;border-radius:2px;background:var(--accent);margin-top:3px}
+.load{font-size:11px;padding:1px 7px;border-radius:999px;background:var(--bg);color:var(--muted);font-variant-numeric:tabular-nums}
+.load.hi{background:var(--warn-soft);color:var(--warn);font-weight:600}
+.load.over{background:var(--danger-soft);color:var(--danger);font-weight:600}
+.corner{border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:3}
+.hours{position:relative;border-right:1px solid var(--line)}
+.hours div{position:absolute;right:6px;font-size:11px;color:var(--muted);transform:translateY(-50%);font-family:var(--f-mono)}
+.col{position:relative;border-right:1px solid var(--line);cursor:copy}
+.col:last-child{border-right:0}
+.col.off{background:repeating-linear-gradient(0deg,transparent 0 23px,transparent 23px 24px)}
+.hline{position:absolute;left:0;right:0;border-top:1px solid var(--line);pointer-events:none}
+.hline.half{border-top-style:dashed;opacity:.55}
+.band{position:absolute;left:0;right:0;pointer-events:none}
+.band.work{background:repeating-linear-gradient(135deg,var(--work) 0 6px,var(--work-hatch) 6px 8px);opacity:.9}
+.band.work span{position:absolute;top:6px;left:6px;font-size:11px;color:var(--work-ink);font-weight:600;background:var(--work);padding:1px 6px;border-radius:4px}
+.band.closed{background:var(--bg);opacity:.7}
+.nowline{position:absolute;left:0;right:0;border-top:2px solid var(--danger);z-index:2;pointer-events:none}
+.nowline::before{content:"";position:absolute;left:-4px;top:-5px;width:8px;height:8px;border-radius:50%;background:var(--danger)}
+.ev{position:absolute;left:4px;right:4px;border-radius:6px;padding:3px 6px;font-size:12px;overflow:hidden;cursor:pointer;z-index:1;border:0;text-align:left;display:flex;flex-direction:column;gap:1px;line-height:1.25}
+.ev.pres{background:var(--accent-soft);border-left:3px solid var(--accent)}
+.ev.onl{background:var(--online);color:var(--online-ink);border-left:3px solid var(--online-ink)}
+.ev.blk{background:var(--block);color:var(--block-ink);border-left:3px solid var(--block-ink)}
+.ev.canc{opacity:.45;text-decoration:line-through}
+.ev.err{outline:2px solid var(--danger);outline-offset:-1px}
+.ev.warnx{outline:2px dashed var(--warn);outline-offset:-1px}
+.ev b{font-weight:600}
+.ev .t{font-family:var(--f-mono);font-size:10.5px;opacity:.85}
+.ev .flag{position:absolute;top:2px;right:4px;font-weight:700;color:var(--danger);font-size:12px}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:500;min-width:0}
+label.f input,label.f select,label.f textarea{border:1px solid var(--line);border-radius:7px;padding:7px 9px;background:var(--bg);color:var(--ink);font-size:14px;width:100%}
+label.f textarea{min-height:60px;resize:vertical}
+.check{display:flex;gap:6px;flex-wrap:wrap}
+.check label{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer;background:var(--bg)}
+.check input:checked+span{color:var(--accent);font-weight:600}
+
+table.list{width:100%;border-collapse:collapse;font-size:13.5px}
+table.list th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500;padding:8px;border-bottom:1px solid var(--line)}
+table.list td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.tablebox{overflow-x:auto}
+.pill{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:999px;font-weight:500;white-space:nowrap}
+.pill.pres{background:var(--accent-soft);color:var(--accent)}
+.pill.onl{background:var(--online);color:var(--online-ink)}
+.pill.mix{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.pill.off{background:var(--bg);color:var(--muted)}
+.rowact{display:flex;gap:6px;flex-wrap:wrap}
+
+.days{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.day{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);display:flex;flex-direction:column;gap:8px}
+.day h3 span{font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:12.5px;margin-left:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--accent);color:var(--accent);background:var(--surface);border-radius:999px;padding:3px 10px;font-family:var(--f-mono);font-size:12px}
+.chip:hover{background:var(--accent);color:var(--accent-ink)}
+.empty{padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:10px}
+
+dialog{border:0;border-radius:14px;padding:0;background:var(--surface);color:var(--ink);width:min(560px,calc(100vw - 32px));box-shadow:0 20px 60px rgba(0,0,0,.25);max-height:calc(100vh - 32px)}
+dialog::backdrop{background:rgba(10,20,25,.45)}
+.dlg{padding:18px;display:flex;flex-direction:column;gap:14px}
+.dlg header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.x{background:none;border:0;font-size:20px;color:var(--muted);line-height:1;padding:4px}
+.issues{display:flex;flex-direction:column;gap:6px}
+.iss{font-size:13px;padding:7px 10px;border-radius:7px}
+.iss.err{background:var(--danger-soft);color:var(--danger)}
+.iss.warn{background:var(--warn-soft);color:var(--warn)}
+.iss.ok{background:var(--accent-soft);color:var(--accent)}
+.dlg footer{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.dlg footer .grp{display:flex;gap:8px;flex-wrap:wrap}
+.confirm{border:1px solid var(--danger);background:var(--danger-soft);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px;font-size:13px}
+.confirm .grp{display:flex;gap:8px;flex-wrap:wrap}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:13px;z-index:50;box-shadow:var(--shadow)}
+.ro{font-size:12.5px;padding:8px 10px;border-radius:8px;background:var(--warn-soft);color:var(--warn)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Agenda Doble Jornada</h1>
+      <p>Trabajo y consulta particular en una sola semana. Las sesiones que chocan con la jornada, con otra sesión o sin pausa se marcan solas.</p>
+    </div>
+    <div class="hdr-actions">
+      <span class="status" id="status"><span class="dot"></span><span>Cargando…</span></span>
+      <button class="btn sm" id="bExport" type="button">Exportar respaldo</button>
+      <button class="btn sm" id="bImport" type="button">Importar respaldo</button>
+      <input type="file" id="fImport" accept="application/json,.json" hidden>
+    </div>
+  </header>
+
+  <div class="privacy">Los datos se guardan solo en este navegador y no se envían a ningún servidor. Exporta un respaldo cada semana: si borras los datos de navegación o cambias de equipo, se recupera con "Importar respaldo". Registra a cada paciente con un código o iniciales; no guardes información clínica aquí.</div>
+  <div class="ro" id="ro" hidden>Tienes acceso de solo lectura. Pide permiso de colaborador para agendar.</div>
+
+  <section class="stats" id="stats"></section>
+
+  <nav class="tabs" role="tablist" id="tabs">
+    <button role="tab" data-tab="agenda" aria-selected="true">Agenda semanal</button>
+    <button role="tab" data-tab="disp" aria-selected="false">Horarios libres</button>
+    <button role="tab" data-tab="pac" aria-selected="false">Pacientes</button>
+    <button role="tab" data-tab="aj" aria-selected="false">Ajustes</button>
+  </nav>
+
+  <section id="v-agenda" class="view" style="display:flex;flex-direction:column;gap:12px">
+    <div class="toolbar">
+      <div class="grp">
+        <button class="btn sm" id="prev" aria-label="Semana anterior">‹</button>
+        <button class="btn sm" id="today">Hoy</button>
+        <button class="btn sm" id="next" aria-label="Semana siguiente">›</button>
+        <span class="weeklabel" id="weeklabel"></span>
+      </div>
+      <div class="grp">
+        <button class="btn" id="newBlock">+ Bloqueo personal</button>
+        <button class="btn primary" id="newSession">+ Agendar sesión</button>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i class="sw work"></i>Jornada laboral</span>
+      <span><i class="sw pres"></i>Sesión presencial</span>
+      <span><i class="sw onl"></i>Sesión online</span>
+      <span><i class="sw blk"></i>Bloqueo personal</span>
+      <span><i class="sw err"></i>Con cruce</span>
+    </div>
+    <div class="gridbox"><div class="grid" id="grid"></div></div>
+    <p class="muted" style="margin:0;font-size:12.5px">Haz clic en un espacio vacío para agendar a esa hora, o en una sesión para editarla.</p>
+  </section>
+
+  <section id="v-disp" class="view" hidden>
+    <div class="panel">
+      <div class="toolbar">
+        <h2>Horarios libres para una sesión nueva</h2>
+        <div class="grp">
+          <label class="f" style="flex-direction:row;align-items:center;gap:6px">Duración
+            <select id="dDur"><option>45</option><option selected>50</option><option>60</option><option>90</option></select></label>
+          <label class="f" style="flex-direction:row;align-items:center;gap:6px">Modalidad
+            <select id="dMod"><option value="online">Online</option><option value="presencial">Presencial</option></select></label>
+          <label class="f" style="flex-direction:row;align-items:center;gap:6px">Próximos
+            <select id="dRange"><option value="7">7 días</option><option value="14" selected>14 días</option><option value="28">28 días</option></select></label>
+        </div>
+      </div>
+      <p class="muted" style="margin:0;font-size:13px" id="dHelp"></p>
+      <div class="days" id="dList"></div>
+    </div>
+  </section>
+
+  <section id="v-pac" class="view" hidden>
+    <div class="panel">
+      <h2 id="pFormTitle">Nuevo paciente</h2>
+      <form id="pForm" class="formgrid" autocomplete="off">
+        <input type="hidden" id="pId">
+        <label class="f">Código o iniciales<input id="pCode" required maxlength="20" placeholder="Ej: P-014 o M.R."></label>
+        <label class="f">Modalidad habitual<select id="pMod"><option value="presencial">Presencial</option><option value="online">Online</option><option value="mixta">Mixta</option></select></label>
+        <label class="f">Frecuencia<select id="pFreq"><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option><option value="eventual">Eventual</option></select></label>
+        <label class="f">Estado<select id="pAct"><option value="activo">Activo</option><option value="pausa">En pausa</option><option value="alta">Alta</option></select></label>
+        <label class="f" style="grid-column:1/-1">Nota logística (opcional)<input id="pNote" maxlength="120" placeholder="Ej: prefiere después de las 19:00, link fijo de videollamada"></label>
+        <div class="rowact" style="grid-column:1/-1">
+          <button class="btn primary" type="submit" id="pSave">Guardar paciente</button>
+          <button class="btn" type="button" id="pCancel" hidden>Cancelar edición</button>
+        </div>
+      </form>
+    </div>
+    <div class="panel">
+      <h2>Pacientes</h2>
+      <div class="tablebox" id="pList"></div>
+    </div>
+  </section>
+
+  <section id="v-aj" class="view" hidden>
+    <form class="panel" id="cForm" autocomplete="off">
+      <h2>Jornada laboral</h2>
+      <div class="formgrid">
+        <label class="f">Entrada<input type="time" id="cWS" step="900"></label>
+        <label class="f">Salida<input type="time" id="cWE" step="900"></label>
+        <div class="f" style="grid-column:1/-1">Días laborales
+          <div class="check" id="cDays"></div></div>
+      </div>
+      <h2>Consulta particular</h2>
+      <div class="formgrid">
+        <label class="f">Duración de sesión (min)<input type="number" id="cSM" min="15" max="180" step="5"></label>
+        <label class="f">Pausa entre sesiones (min)<input type="number" id="cBM" min="0" max="60" step="5"></label>
+        <label class="f">Traslado trabajo ↔ consulta presencial (min)<input type="number" id="cMP" min="0" max="120" step="5"></label>
+        <label class="f">Máximo de sesiones por día<input type="number" id="cMax" min="1" max="15"></label>
+      </div>
+      <h2>Horario de atención</h2>
+      <div class="formgrid">
+        <label class="f">Lun–Vie desde<input type="time" id="cVI" step="900"></label>
+        <label class="f">Lun–Vie hasta<input type="time" id="cVF" step="900"></label>
+        <label class="f">Sábado desde<input type="time" id="cSI" step="900"></label>
+        <label class="f">Sábado hasta<input type="time" id="cSF" step="900"></label>
+        <label class="f">¿Atiende sábado?<select id="cSat"><option value="1">Sí</option><option value="0">No</option></select></label>
+        <label class="f">¿Atiende domingo?<select id="cSun"><option value="0">No</option><option value="1">Sí, mismo horario que sábado</option></select></label>
+      </div>
+      <div class="rowact"><button class="btn primary" type="submit">Guardar ajustes</button></div>
+    </form>
+  </section>
+</div>
+
+<dialog id="dlg">
+  <form class="dlg" id="sForm" method="dialog" autocomplete="off">
+    <header><h2 id="sTitle">Agendar sesión</h2><button type="button" class="x" id="sClose" aria-label="Cerrar">×</button></header>
+    <input type="hidden" id="sId">
+    <div class="formgrid">
+      <label class="f">Tipo<select id="sTipo"><option value="sesion">Sesión con paciente</option><option value="bloqueo">Bloqueo personal</option></select></label>
+      <label class="f" id="wPac">Paciente<select id="sPac"></select></label>
+      <label class="f" id="wNewPac" hidden>Código del nuevo paciente<input id="sNewPac" maxlength="20" placeholder="Ej: P-015"></label>
+      <label class="f" id="wTit" hidden>Motivo<input id="sTit" maxlength="60" placeholder="Ej: Supervisión, trámite, almuerzo"></label>
+      <label class="f">Fecha<input type="date" id="sFecha" required></label>
+      <label class="f">Inicio<input type="time" id="sIni" step="300" required></label>
+      <label class="f">Duración (min)<input type="number" id="sDur" min="5" max="600" step="5" required></label>
+      <label class="f" id="wMod">Modalidad<select id="sMod"><option value="presencial">Presencial</option><option value="online">Online</option></select></label>
+      <label class="f" id="wEst">Estado<select id="sEst"><option value="agendada">Agendada</option><option value="realizada">Realizada</option><option value="cancelada">Cancelada</option></select></label>
+      <label class="f" id="wRep">Repetir<select id="sRep"><option value="0">No se repite</option><option value="7">Cada semana</option><option value="14">Cada 2 semanas</option></select></label>
+      <label class="f" id="wRepN" hidden>N° de sesiones<input type="number" id="sRepN" min="2" max="52" value="12"></label>
+      <label class="f" id="wScope" hidden>Aplicar cambios a<select id="sScope"><option value="one">Solo esta sesión</option><option value="next">Esta y las siguientes de la serie</option></select></label>
+      <label class="f" style="grid-column:1/-1">Nota logística<input id="sNota" maxlength="120" placeholder="Ej: link de videollamada, sala 2"></label>
+    </div>
+    <div class="issues" id="sIssues"></div>
+    <div class="confirm" id="sConfirm" hidden>
+      <span id="sConfirmTxt">¿Eliminar esta sesión?</span>
+      <div class="grp">
+        <button type="button" class="btn danger sm" data-del="one">Eliminar solo esta</button>
+        <button type="button" class="btn danger sm" data-del="next" id="delNext">Esta y las siguientes</button>
+        <button type="button" class="btn sm" id="delNo">No eliminar</button>
+      </div>
+    </div>
+    <footer>
+      <div class="grp"><button type="button" class="btn danger" id="sDel" hidden>Eliminar</button></div>
+      <div class="grp">
+        <button type="button" class="btn" id="sCancel">Cancelar</button>
+        <button type="submit" class="btn primary" id="sSave">Guardar</button>
+      </div>
+    </footer>
+  </form>
+</dialog>
+
+<dialog id="dlgP">
+  <div class="dlg">
+    <header><h2>Eliminar paciente</h2><button type="button" class="x" id="pdClose" aria-label="Cerrar">×</button></header>
+    <p style="margin:0" id="pdTxt"></p>
+    <footer><span></span><div class="grp"><button class="btn" id="pdNo">Cancelar</button><button class="btn danger" id="pdYes">Eliminar paciente y sesiones futuras</button></div></footer>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+const DEF = {workStart:"08:30",workEnd:"17:30",workDays:[1,2,3,4,5],sessionMin:50,bufferMin:10,margenPresencial:30,maxDia:4,
+  ventanaIni:"07:00",ventanaFin:"22:00",sabadoIni:"09:00",sabadoFin:"14:00",sabado:true,domingo:false};
+const DN = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+const DNL = ["lunes","martes","miércoles","jueves","viernes","sábado","domingo"];
+const MES = ["ene","feb","mar","abr","may","jun","jul","ago","sept","oct","nov","dic"];
+const PX = 0.9; // px por minuto
+const S = {cfg:{...DEF},patients:[],sessions:[],week:monday(new Date()),tab:"agenda",canWrite:true,mode:"..."};
+let api=null, cfgDirty=false, editing=null, pendingDelPatient=null;
+
+/* ---------- utilidades ---------- */
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function pad(n){return String(n).padStart(2,"0")}
+function ymd(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function parse(s){const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)}
+function addDays(s,n){const d=parse(s);d.setDate(d.getDate()+n);return ymd(d)}
+function monday(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const w=x.getDay()||7;x.setDate(x.getDate()-w+1);return ymd(x)}
+function dow(s){return parse(s).getDay()||7}
+function toMin(t){if(!t)return 0;const [h,m]=t.split(":").map(Number);return h*60+(m||0)}
+function fromMin(m){return pad(Math.floor(m/60))+":"+pad(m%60)}
+function nice(s){const d=parse(s);return DNL[(d.getDay()||7)-1]+" "+d.getDate()+" "+MES[d.getMonth()]}
+function short(s){const d=parse(s);return d.getDate()+" "+MES[d.getMonth()]}
+function todayS(){return ymd(new Date())}
+function nowMin(){const d=new Date();return d.getHours()*60+d.getMinutes()}
+function hrs(m){const h=m/60;return (Math.round(h*10)/10).toString().replace(".",",")+" h"}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2600)}
+function pat(id){return S.patients.find(p=>p.id===id)}
+function label(s){if(s.tipo==="bloqueo")return s.titulo||"Bloqueo";const p=pat(s.pacienteId);return p?p.codigo:"Paciente"}
+
+/* ---------- reglas de cruce ---------- */
+function workOn(date){const c=S.cfg;if(!(c.workDays||[]).includes(dow(date)))return null;return [toMin(c.workStart),toMin(c.workEnd)]}
+function windowFor(date){const c=S.cfg,w=dow(date);
+  if(w<=5)return [toMin(c.ventanaIni),toMin(c.ventanaFin)];
+  if(w===6)return c.sabado?[toMin(c.sabadoIni),toMin(c.sabadoFin)]:null;
+  return c.domingo?[toMin(c.sabadoIni),toMin(c.sabadoFin)]:null}
+function active(date){return S.sessions.filter(s=>s.fecha===date&&s.estado!=="cancelada")}
+function analyze(it,exclude){
+  exclude=exclude||new Set();const out=[];const c=S.cfg;
+  const a=toMin(it.inicio),b=a+(+it.duracion||0);
+  if(it.estado==="cancelada")return out;
+  const w=workOn(it.fecha);
+  if(w){const m=(it.tipo==="sesion"&&it.modalidad==="presencial")?(+c.margenPresencial||0):0;
+    if(a<w[1]&&b>w[0])out.push({lvl:"err",msg:"Se cruza con la jornada laboral ("+c.workStart+"–"+c.workEnd+")."});
+    else if(m&&a<w[1]+m&&b>w[0]-m)out.push({lvl:"warn",msg:"Quedan menos de "+m+" min de traslado entre el trabajo y la consulta presencial."});}
+  const buf=+c.bufferMin||0;
+  for(const o of active(it.fecha)){if(exclude.has(o.id))continue;
+    const oa=toMin(o.inicio),ob=oa+(+o.duracion||0);
+    if(a<ob&&b>oa)out.push({lvl:"err",msg:"Se cruza con "+label(o)+" ("+o.inicio+")."});
+    else if(buf&&it.tipo==="sesion"&&o.tipo==="sesion"&&a<ob+buf&&b>oa-buf)out.push({lvl:"warn",msg:"Sin la pausa de "+buf+" min respecto de "+label(o)+" ("+o.inicio+")."});}
+  if(it.tipo==="sesion"){const win=windowFor(it.fecha);
+    if(!win||a<win[0]||b>win[1])out.push({lvl:"warn",msg:"Fuera del horario de atención definido en Ajustes."});
+    const n=active(it.fecha).filter(o=>o.tipo==="sesion"&&!exclude.has(o.id)).length+1;
+    if(n>(+c.maxDia||99))out.push({lvl:"warn",msg:"Ese día quedaría con "+n+" sesiones (máximo "+c.maxDia+")."});}
+  return out}
+
+/* ---------- datos ---------- */
+function initStore(){local()}
+function remote(db){
+  S.mode="nube";setStatus(true,"Guardado en la nube");
+  const onErr=()=>setStatus(false,"Sin conexión con los datos");
+  db.collection("pacientes").onSnapshot(s=>{S.patients=s.docs.map(d=>({id:d.id,...d.data()}));render()},onErr);
+  db.collection("sesiones").onSnapshot(s=>{S.sessions=s.docs.map(d=>({id:d.id,...d.data()}));render()},onErr);
+  db.doc("ajustes/general").onSnapshot(s=>{if(s.exists){S.cfg={...DEF,...s.data()}}if(!cfgDirty)fillCfg();render()},onErr);
+  api={add:(c,d)=>db.collection(c).add(d),upd:(c,id,d)=>db.doc(c+"/"+id).update(d),del:(c,id)=>db.doc(c+"/"+id).delete(),cfg:d=>db.doc("ajustes/general").set(d)};
+}
+function local(){
+  S.mode="local";
+  const K="agenda-doble-jornada",KB="agenda-doble-jornada-respaldo";
+  const showSt=()=>{let lb=null;try{lb=localStorage.getItem(KB)}catch(e){}
+    const days=lb?Math.floor((Date.now()-Number(lb))/864e5):null;
+    setStatus(lb&&days<8,lb?("Último respaldo: "+(days===0?"hoy":days===1?"ayer":"hace "+days+" días")):"Sin respaldo todavía")};
+  showSt();
+  let st={pacientes:{},sesiones:{},cfg:null};
+  try{const r=localStorage.getItem(K);if(r)st=JSON.parse(r)}catch(e){}
+  const pull=()=>{S.patients=Object.entries(st.pacientes).map(([id,v])=>({id,...v}));S.sessions=Object.entries(st.sesiones).map(([id,v])=>({id,...v}));if(st.cfg)S.cfg={...DEF,...st.cfg};render()};
+  const save=()=>{try{localStorage.setItem(K,JSON.stringify(st))}catch(e){}pull()};
+  api={add:async(c,d)=>{const id=uid();st[c][id]=d;save();return {id}},upd:async(c,id,d)=>{st[c][id]={...st[c][id],...d};save()},del:async(c,id)=>{delete st[c][id];save()},cfg:async d=>{st.cfg=d;save()}};
+  $("bExport").onclick=()=>{
+    const blob=new Blob([JSON.stringify({app:"agenda-doble-jornada",version:1,exportado:new Date().toISOString(),...st},null,2)],{type:"application/json"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="respaldo-agenda-"+todayS()+".json";
+    document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+    try{localStorage.setItem(KB,String(Date.now()))}catch(e){}showSt();toast("Respaldo descargado")};
+  $("bImport").onclick=()=>$("fImport").click();
+  $("fImport").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+    r.onload=()=>{try{const d=JSON.parse(r.result);
+      if(!d||typeof d.pacientes!=="object"||typeof d.sesiones!=="object")throw 0;
+      st={pacientes:d.pacientes||{},sesiones:d.sesiones||{},cfg:d.cfg||null};save();fillCfg();
+      toast("Respaldo importado: "+Object.keys(st.pacientes).length+" pacientes, "+Object.keys(st.sesiones).length+" sesiones")}
+      catch(err){toast("El archivo no es un respaldo válido de esta agenda.")}
+      e.target.value=""};r.readAsText(f)};
+  pull();fillCfg();
+}
+async function guard(p){try{return await p}catch(e){
+  if(e&&e.code==="invalid_argument"){S.canWrite=false;applyRO();toast("No tienes permiso para editar esta agenda.")}
+  else if(e&&e.code==="quota_exceeded")toast("La agenda llegó a su límite de registros. Elimina sesiones antiguas.");
+  else toast("No se pudo guardar. Intenta de nuevo.");throw e}}
+function setStatus(on,txt){$("status").innerHTML='<span class="dot'+(on?" on":"")+'"></span><span>'+esc(txt)+"</span>"}
+function applyRO(){$("ro").hidden=S.canWrite;["newSession","newBlock","pSave","sSave"].forEach(i=>{const b=$(i);if(b)b.disabled=!S.canWrite})}
+
+/* ---------- render ---------- */
+function render(){renderStats();if(S.tab==="agenda")renderGrid();if(S.tab==="disp")renderDisp();if(S.tab==="pac")renderPac()}
+function weekDates(){return Array.from({length:7},(_,i)=>addDays(S.week,i))}
+function renderStats(){
+  const days=weekDates();let ses=0,clin=0,errs=0,over=0,work=0;const c=S.cfg;
+  days.forEach(d=>{const w=workOn(d);if(w)work+=w[1]-w[0];
+    const list=active(d);const n=list.filter(s=>s.tipo==="sesion").length;if(n>(+c.maxDia||99))over++;
+    list.forEach(s=>{if(s.tipo==="sesion"){ses++;clin+=+s.duracion||0}
+      if(analyze(s,new Set([s.id])).some(i=>i.lvl==="err"))errs++})});
+  const act=S.patients.filter(p=>(p.estado||"activo")==="activo").length;
+  $("stats").innerHTML=
+    stat("Sesiones esta semana",ses,hrs(clin)+" de atención")+
+    stat("Carga total",hrs(work+clin),hrs(work)+" laborales + "+hrs(clin)+" clínicas")+
+    stat("Cruces",errs,errs?"Revisa los bloques marcados":"Semana sin choques",errs?"alert":"good")+
+    stat("Días sobre el máximo",over,"Límite: "+c.maxDia+" sesiones/día",over?"alert":"")+
+    stat("Pacientes activos",act,S.patients.length+" en total");
+}
+function stat(k,v,s,cls){return '<div class="stat '+(cls||"")+'"><span class="k">'+k+'</span><span class="v">'+v+'</span><span class="s">'+esc(s)+"</span></div>"}
+function gridRange(){const c=S.cfg;const lo=Math.min(toMin(c.ventanaIni),toMin(c.workStart),toMin(c.sabadoIni));const hi=Math.max(toMin(c.ventanaFin),toMin(c.workEnd),toMin(c.sabadoFin));return [Math.floor(lo/60)*60,Math.ceil(hi/60)*60]}
+function renderGrid(){
+  const days=weekDates(),[g0,g1]=gridRange(),H=(g1-g0)*PX,c=S.cfg,td=todayS();
+  const a=parse(days[0]),b=parse(days[6]);
+  $("weeklabel").textContent=a.getDate()+" "+MES[a.getMonth()]+" – "+b.getDate()+" "+MES[b.getMonth()]+" "+b.getFullYear();
+  let h='<div class="corner"></div>';
+  days.forEach((d,i)=>{const n=active(d).filter(s=>s.tipo==="sesion").length;const mx=+c.maxDia||99;
+    const cls=n>mx?"over":n===mx?"hi":"";
+    h+='<div class="dh'+(d===td?" today":"")+'"><span class="dn">'+DN[i]+'</span><span class="dd">'+parse(d).getDate()+'</span><span class="load '+cls+'">'+n+(n===1?" sesión":" sesiones")+"</span></div>"});
+  h+='<div class="hours" style="height:'+H+'px">';
+  for(let m=g0+60;m<g1;m+=60)h+='<div style="top:'+((m-g0)*PX)+'px">'+fromMin(m)+"</div>";
+  h+="</div>";
+  days.forEach(d=>{
+    h+='<div class="col" data-date="'+d+'" style="height:'+H+'px">';
+    for(let m=g0+30;m<g1;m+=30)h+='<div class="hline'+(m%60?" half":"")+'" style="top:'+((m-g0)*PX)+'px"></div>';
+    const win=windowFor(d);
+    if(!win)h+='<div class="band closed" style="top:0;height:'+H+'px"></div>';
+    const w=workOn(d);
+    if(w)h+='<div class="band work" style="top:'+((w[0]-g0)*PX)+'px;height:'+((w[1]-w[0])*PX)+'px"><span>Trabajo '+c.workStart+"–"+c.workEnd+"</span></div>";
+    if(d===td){const nm=nowMin();if(nm>g0&&nm<g1)h+='<div class="nowline" style="top:'+((nm-g0)*PX)+'px"></div>'}
+    S.sessions.filter(s=>s.fecha===d).sort((x,y)=>toMin(x.inicio)-toMin(y.inicio)).forEach(s=>{
+      const st=toMin(s.inicio),du=+s.duracion||0;const top=(Math.max(st,g0)-g0)*PX,ht=Math.max(18,du*PX-2);
+      const iss=analyze(s,new Set([s.id]));const err=iss.some(i=>i.lvl==="err"),wr=!err&&iss.length>0;
+      const kind=s.tipo==="bloqueo"?"blk":(s.modalidad==="online"?"onl":"pres");
+      const title=label(s)+" · "+s.inicio+"–"+fromMin(st+du)+(iss.length?" · "+iss.map(i=>i.msg).join(" "):"");
+      h+='<button type="button" class="ev '+kind+(s.estado==="cancelada"?" canc":"")+(err?" err":wr?" warnx":"")+'" data-id="'+s.id+'" style="top:'+top+'px;height:'+ht+'px" title="'+esc(title)+'">'+
+        (err?'<span class="flag">!</span>':"")+'<b>'+esc(label(s))+'</b><span class="t">'+s.inicio+"–"+fromMin(st+du)+(s.tipo==="sesion"?" · "+(s.modalidad==="online"?"online":"presencial"):"")+"</span></button>"});
+    h+="</div>"});
+  $("grid").innerHTML=h;
+}
+function renderDisp(){
+  const dur=+$("dDur").value,mod=$("dMod").value,n=+$("dRange").value,td=todayS(),nm=nowMin();
+  $("dHelp").textContent="Inicios posibles cada 30 min que respetan la jornada laboral, la pausa de "+S.cfg.bufferMin+" min entre sesiones"+(mod==="presencial"?", "+S.cfg.margenPresencial+" min de traslado":"")+" y el máximo de "+S.cfg.maxDia+" sesiones por día. Haz clic en una hora para agendar.";
+  let h="";
+  for(let i=0;i<n;i++){const d=addDays(td,i);const win=windowFor(d);if(!win)continue;const slots=[];
+    for(let t=Math.ceil(win[0]/30)*30;t+dur<=win[1];t+=30){if(d===td&&t<=nm)continue;
+      if(!analyze({fecha:d,inicio:fromMin(t),duracion:dur,modalidad:mod,tipo:"sesion"}).length)slots.push(t)}
+    if(slots.length)h+='<div class="day"><h3>'+nice(d)+'<span>'+slots.length+" opciones</span></h3><div class=\"chips\">"+slots.map(t=>'<button class="chip" data-d="'+d+'" data-t="'+fromMin(t)+'">'+fromMin(t)+"</button>").join("")+"</div></div>"}
+  $("dList").innerHTML=h||'<div class="empty">No hay horarios libres con estas condiciones. Prueba otra modalidad, una duración menor o amplía el horario de atención en Ajustes.</div>';
+}
+function freqLabel(f){return {semanal:"Semanal",quincenal:"Quincenal",mensual:"Mensual",eventual:"Eventual"}[f]||"—"}
+function renderPac(){
+  const td=todayS();
+  if(!S.patients.length){$("pList").innerHTML='<div class="empty">Aún no hay pacientes. Agrega el primero con el formulario de arriba; luego podrás agendarlo con sesiones recurrentes en un clic.</div>';return}
+  const rows=S.patients.slice().sort((a,b)=>String(a.codigo).localeCompare(String(b.codigo))).map(p=>{
+    const fut=S.sessions.filter(s=>s.pacienteId===p.id&&s.fecha>=td&&s.estado!=="cancelada").sort((a,b)=>(a.fecha+a.inicio).localeCompare(b.fecha+b.inicio));
+    const nx=fut[0];const est=p.estado||"activo";
+    const mc=p.modalidad==="online"?"onl":p.modalidad==="mixta"?"mix":"pres";
+    return "<tr><td><b>"+esc(p.codigo)+"</b>"+(est!=="activo"?' <span class="pill off">'+(est==="pausa"?"En pausa":"Alta")+"</span>":"")+(p.nota?'<div class="muted" style="font-size:12px">'+esc(p.nota)+"</div>":"")+"</td>"+
+      '<td><span class="pill '+mc+'">'+esc(p.modalidad==="mixta"?"Mixta":p.modalidad==="online"?"Online":"Presencial")+"</span></td>"+
+      "<td>"+freqLabel(p.frecuencia)+"</td>"+
+      '<td class="mono">'+(nx?nice(nx.fecha)+" · "+nx.inicio:'<span class="muted">Sin agendar</span>')+"</td>"+
+      '<td class="mono">'+fut.length+"</td>"+
+      '<td><div class="rowact"><button class="btn sm primary" data-act="sched" data-id="'+p.id+'">Agendar</button><button class="btn sm" data-act="edit" data-id="'+p.id+'">Editar</button><button class="btn sm danger" data-act="del" data-id="'+p.id+'">Eliminar</button></div></td></tr>'});
+  $("pList").innerHTML='<table class="list"><thead><tr><th>Paciente</th><th>Modalidad</th><th>Frecuencia</th><th>Próxima sesión</th><th>Futuras</th><th></th></tr></thead><tbody>'+rows.join("")+"</tbody></table>";
+}
+
+/* ---------- pestañas ---------- */
+$("tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]");if(!b)return;S.tab=b.dataset.tab;
+  document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x===b?"true":"false"));
+  ["agenda","disp","pac","aj"].forEach(t=>$("v-"+t).hidden=t!==S.tab);
+  if(S.tab==="aj"&&!cfgDirty)fillCfg();render()});
+$("prev").onclick=()=>{S.week=addDays(S.week,-7);render()};
+$("next").onclick=()=>{S.week=addDays(S.week,7);render()};
+$("today").onclick=()=>{S.week=monday(new Date());render()};
+["dDur","dMod","dRange"].forEach(i=>$(i).addEventListener("change",renderDisp));
+
+/* ---------- modal de sesión ---------- */
+function fillPacSelect(sel){
+  const opts=S.patients.filter(p=>(p.estado||"activo")!=="alta"||p.id===sel).sort((a,b)=>String(a.codigo).localeCompare(String(b.codigo)))
+    .map(p=>'<option value="'+p.id+'"'+(p.id===sel?" selected":"")+">"+esc(p.codigo)+"</option>").join("");
+  $("sPac").innerHTML=opts+'<option value="__new"'+(!opts?" selected":"")+">+ Nuevo paciente…</option>";
+}
+function openSession(o){
+  if(!S.canWrite&&!o.id){toast("Tienes acceso de solo lectura.");return}
+  editing=o.id?S.sessions.find(s=>s.id===o.id):null;
+  const s=editing||{tipo:o.tipo||"sesion",fecha:o.fecha||todayS(),inicio:o.inicio||"19:00",duracion:o.tipo==="bloqueo"?60:S.cfg.sessionMin,modalidad:"presencial",estado:"agendada",pacienteId:o.pacienteId||"",titulo:"",nota:""};
+  $("sId").value=editing?editing.id:"";
+  $("sTitle").textContent=editing?(s.tipo==="bloqueo"?"Editar bloqueo":"Editar sesión"):(s.tipo==="bloqueo"?"Nuevo bloqueo personal":"Agendar sesión");
+  $("sTipo").value=s.tipo;fillPacSelect(s.pacienteId);
+  if(!editing&&s.pacienteId){const p=pat(s.pacienteId);if(p&&p.modalidad!=="mixta")s.modalidad=p.modalidad}
+  if(o.modalidad)s.modalidad=o.modalidad;
+  $("sNewPac").value="";$("sTit").value=s.titulo||"";$("sFecha").value=s.fecha;$("sIni").value=s.inicio;$("sDur").value=s.duracion;
+  $("sMod").value=s.modalidad||"presencial";$("sEst").value=s.estado||"agendada";$("sNota").value=s.nota||"";
+  $("sRep").value=o.rep||"0";$("sRepN").value=12;$("sScope").value="one";
+  $("sDel").hidden=!editing;$("sConfirm").hidden=true;
+  syncForm();$("dlg").showModal();
+}
+function syncForm(){
+  const tipo=$("sTipo").value,ses=tipo==="sesion";
+  $("wPac").hidden=!ses;$("wNewPac").hidden=!(ses&&$("sPac").value==="__new");$("wTit").hidden=ses;$("wMod").hidden=!ses;
+  $("wRep").hidden=!!editing;$("wRepN").hidden=!!editing||$("sRep").value==="0";
+  $("wScope").hidden=!(editing&&editing.serieId);$("wEst").hidden=!editing;
+  checkForm();
+}
+function formItem(){return {tipo:$("sTipo").value,fecha:$("sFecha").value,inicio:$("sIni").value,duracion:+$("sDur").value,modalidad:$("sMod").value,estado:editing?$("sEst").value:"agendada"}}
+function checkForm(){
+  const it=formItem();if(!it.fecha||!it.inicio||!it.duracion){$("sIssues").innerHTML="";return}
+  const ex=new Set(editing?[editing.id]:[]);let h="";
+  const rep=!editing?+$("sRep").value:0;
+  if(rep){const n=Math.min(52,Math.max(2,+$("sRepN").value||2));const bad=[];
+    for(let i=0;i<n;i++){const d=addDays(it.fecha,i*rep);const iss=analyze({...it,fecha:d},ex);if(iss.some(x=>x.lvl==="err"))bad.push(short(d))}
+    const first=analyze(it,ex);first.forEach(i=>h+='<div class="iss '+i.lvl+'">'+esc(i.msg)+"</div>");
+    h+=bad.length?'<div class="iss err">'+bad.length+" de "+n+" fechas tienen cruce: "+esc(bad.join(", "))+".</div>":'<div class="iss ok">Las '+n+" fechas de la serie quedan sin cruces. Última: "+short(addDays(it.fecha,(n-1)*rep))+".</div>";
+  }else{const iss=analyze(it,ex);h=iss.length?iss.map(i=>'<div class="iss '+i.lvl+'">'+esc(i.msg)+"</div>").join(""):'<div class="iss ok">Horario disponible: '+it.inicio+"–"+fromMin(toMin(it.inicio)+it.duracion)+", "+nice(it.fecha)+".</div>"}
+  $("sIssues").innerHTML=h;
+}
+["sTipo","sPac","sFecha","sIni","sDur","sMod","sEst","sRep","sRepN"].forEach(i=>$(i).addEventListener("input",()=>{
+  if(i==="sPac"&&!editing){const p=pat($("sPac").value);if(p&&p.modalidad!=="mixta")$("sMod").value=p.modalidad}
+  if(i==="sTipo"&&!editing){$("sDur").value=$("sTipo").value==="bloqueo"?60:S.cfg.sessionMin;$("sTitle").textContent=$("sTipo").value==="bloqueo"?"Nuevo bloqueo personal":"Agendar sesión"}
+  syncForm()}));
+function closeDlg(){$("dlg").close();editing=null}
+$("sClose").onclick=closeDlg;$("sCancel").onclick=closeDlg;
+$("sForm").addEventListener("submit",async e=>{e.preventDefault();if(!S.canWrite){toast("Tienes acceso de solo lectura.");return}
+  const it=formItem();const tipo=it.tipo;
+  if(!it.fecha||!it.inicio||!it.duracion){toast("Completa fecha, hora y duración.");return}
+  let pid="",titulo="";
+  if(tipo==="sesion"){pid=$("sPac").value;
+    if(pid==="__new"){const code=$("sNewPac").value.trim();if(!code){toast("Escribe el código del nuevo paciente.");$("sNewPac").focus();return}
+      const r=await guard(api.add("pacientes",{codigo:code,modalidad:it.modalidad,frecuencia:+$("sRep").value===14?"quincenal":+$("sRep").value===7?"semanal":"eventual",estado:"activo",nota:""}));pid=r.id}
+  }else{titulo=$("sTit").value.trim()||"Bloqueo personal"}
+  const body={tipo,fecha:it.fecha,inicio:it.inicio,duracion:it.duracion,modalidad:tipo==="sesion"?it.modalidad:"",estado:it.estado,pacienteId:pid,titulo,nota:$("sNota").value.trim()};
+  $("sSave").disabled=true;
+  try{
+    if(editing){
+      if(editing.serieId&&$("sScope").value==="next"){
+        const shift=Math.round((parse(it.fecha)-parse(editing.fecha))/864e5);
+        const list=S.sessions.filter(s=>s.serieId===editing.serieId&&s.fecha>=editing.fecha);
+        for(const s of list){const upd={inicio:body.inicio,duracion:body.duracion,modalidad:body.modalidad,pacienteId:body.pacienteId,titulo:body.titulo,nota:body.nota};
+          if(shift)upd.fecha=addDays(s.fecha,shift);if(s.id===editing.id)upd.estado=body.estado;await guard(api.upd("sesiones",s.id,upd))}
+        toast(list.length+" sesiones actualizadas");
+      }else{await guard(api.upd("sesiones",editing.id,body));toast("Cambios guardados")}
+    }else{
+      const rep=+$("sRep").value;
+      if(rep){const n=Math.min(52,Math.max(2,+$("sRepN").value||2));const sid=uid();
+        for(let i=0;i<n;i++)await guard(api.add("sesiones",{...body,fecha:addDays(body.fecha,i*rep),serieId:sid}));
+        toast(n+" sesiones agendadas")}
+      else{await guard(api.add("sesiones",body));toast(tipo==="sesion"?"Sesión agendada":"Bloqueo agregado")}
+    }
+    S.week=monday(parse(body.fecha));closeDlg();render();
+  }catch(err){}finally{$("sSave").disabled=false}
+});
+$("sDel").onclick=()=>{$("sConfirm").hidden=false;$("delNext").hidden=!(editing&&editing.serieId);
+  $("sConfirmTxt").textContent=editing&&editing.serieId?"Esta sesión es parte de una serie. ¿Qué quieres eliminar?":"¿Eliminar este registro de la agenda?"};
+$("delNo").onclick=()=>$("sConfirm").hidden=true;
+$("sConfirm").addEventListener("click",async e=>{const b=e.target.closest("[data-del]");if(!b||!editing)return;
+  const list=b.dataset.del==="next"?S.sessions.filter(s=>s.serieId===editing.serieId&&s.fecha>=editing.fecha):[editing];
+  try{for(const s of list)await guard(api.del("sesiones",s.id));toast(list.length>1?list.length+" sesiones eliminadas":"Eliminado");closeDlg();render()}catch(err){}});
+
+/* ---------- interacción con la grilla ---------- */
+$("grid").addEventListener("click",e=>{
+  const ev=e.target.closest(".ev");if(ev){openSession({id:ev.dataset.id});return}
+  const col=e.target.closest(".col");if(!col)return;
+  const r=col.getBoundingClientRect();const [g0]=gridRange();
+  const m=Math.floor(((e.clientY-r.top)/PX+g0)/30)*30;
+  openSession({fecha:col.dataset.date,inicio:fromMin(m)});
+});
+$("newSession").onclick=()=>openSession({fecha:S.week<=todayS()&&todayS()<=addDays(S.week,6)?todayS():S.week});
+$("newBlock").onclick=()=>openSession({tipo:"bloqueo",fecha:S.week<=todayS()&&todayS()<=addDays(S.week,6)?todayS():S.week,inicio:"13:00"});
+$("dList").addEventListener("click",e=>{const c=e.target.closest(".chip");if(!c)return;
+  openSession({fecha:c.dataset.d,inicio:c.dataset.t,modalidad:$("dMod").value});$("sDur").value=$("dDur").value;checkForm()});
+
+/* ---------- pacientes ---------- */
+function resetPForm(){$("pId").value="";$("pForm").reset();$("pFormTitle").textContent="Nuevo paciente";$("pCancel").hidden=true}
+$("pCancel").onclick=resetPForm;
+$("pForm").addEventListener("submit",async e=>{e.preventDefault();if(!S.canWrite)return;
+  const body={codigo:$("pCode").value.trim(),modalidad:$("pMod").value,frecuencia:$("pFreq").value,estado:$("pAct").value,nota:$("pNote").value.trim()};
+  if(!body.codigo)return;const id=$("pId").value;
+  try{if(id)await guard(api.upd("pacientes",id,body));else await guard(api.add("pacientes",body));toast(id?"Paciente actualizado":"Paciente agregado");resetPForm()}catch(err){}});
+$("pList").addEventListener("click",e=>{const b=e.target.closest("button[data-act]");if(!b)return;const p=pat(b.dataset.id);if(!p)return;
+  if(b.dataset.act==="edit"){$("pId").value=p.id;$("pCode").value=p.codigo||"";$("pMod").value=p.modalidad||"presencial";$("pFreq").value=p.frecuencia||"semanal";$("pAct").value=p.estado||"activo";$("pNote").value=p.nota||"";
+    $("pFormTitle").textContent="Editar "+p.codigo;$("pCancel").hidden=false;$("pCode").focus();window.scrollTo({top:$("pForm").getBoundingClientRect().top+scrollY-120,behavior:"smooth"})}
+  if(b.dataset.act==="sched"){openSession({pacienteId:p.id,rep:p.frecuencia==="semanal"?"7":p.frecuencia==="quincenal"?"14":"0",modalidad:p.modalidad==="mixta"?undefined:p.modalidad,fecha:todayS()});syncForm()}
+  if(b.dataset.act==="del"){if(!S.canWrite)return;pendingDelPatient=p;const n=S.sessions.filter(s=>s.pacienteId===p.id&&s.fecha>=todayS()).length;
+    $("pdTxt").textContent="Se eliminará "+p.codigo+" y sus "+n+" sesiones futuras. Las sesiones pasadas quedan en la agenda como registro.";$("dlgP").showModal()}});
+$("pdNo").onclick=$("pdClose").onclick=()=>{$("dlgP").close();pendingDelPatient=null};
+$("pdYes").onclick=async()=>{const p=pendingDelPatient;if(!p)return;
+  try{for(const s of S.sessions.filter(s=>s.pacienteId===p.id&&s.fecha>=todayS()))await guard(api.del("sesiones",s.id));
+    await guard(api.del("pacientes",p.id));toast("Paciente eliminado")}catch(err){}
+  $("dlgP").close();pendingDelPatient=null};
+
+/* ---------- ajustes ---------- */
+function fillCfg(){const c=S.cfg;
+  $("cWS").value=c.workStart;$("cWE").value=c.workEnd;$("cSM").value=c.sessionMin;$("cBM").value=c.bufferMin;$("cMP").value=c.margenPresencial;$("cMax").value=c.maxDia;
+  $("cVI").value=c.ventanaIni;$("cVF").value=c.ventanaFin;$("cSI").value=c.sabadoIni;$("cSF").value=c.sabadoFin;$("cSat").value=c.sabado?"1":"0";$("cSun").value=c.domingo?"1":"0";
+  $("cDays").innerHTML=DN.map((n,i)=>'<label><input type="checkbox" value="'+(i+1)+'"'+((c.workDays||[]).includes(i+1)?" checked":"")+"><span>"+n+"</span></label>").join("")}
+$("cForm").addEventListener("input",()=>cfgDirty=true);
+$("cForm").addEventListener("submit",async e=>{e.preventDefault();if(!S.canWrite){toast("Tienes acceso de solo lectura.");return}
+  const d={workStart:$("cWS").value||DEF.workStart,workEnd:$("cWE").value||DEF.workEnd,workDays:[...$("cDays").querySelectorAll("input:checked")].map(x=>+x.value),
+    sessionMin:+$("cSM").value||50,bufferMin:+$("cBM").value||0,margenPresencial:+$("cMP").value||0,maxDia:+$("cMax").value||4,
+    ventanaIni:$("cVI").value||DEF.ventanaIni,ventanaFin:$("cVF").value||DEF.ventanaFin,sabadoIni:$("cSI").value||DEF.sabadoIni,sabadoFin:$("cSF").value||DEF.sabadoFin,
+    sabado:$("cSat").value==="1",domingo:$("cSun").value==="1"};
+  if(toMin(d.workEnd)<=toMin(d.workStart)){toast("La salida debe ser posterior a la entrada.");return}
+  try{await guard(api.cfg(d));S.cfg={...DEF,...d};cfgDirty=false;toast("Ajustes guardados");render()}catch(err){}});
+
+fillCfg();render();initStore();
+setInterval(()=>{if(S.tab==="agenda"&&!$("dlg").open)renderGrid()},60000);
+})();
+</script>
+
+</body>
+</html>
